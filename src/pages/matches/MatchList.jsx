@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getUpcomingMatches, getCompletedMatches } from '../../service/matchService';
 import { Loading, ErrorBanner, EmptyState } from '../../components/PageState';
 import { MatchStatusBadge } from '../../components/Badges';
+import LogoBadge from '../../components/LogoBadge';
 
 export default function MatchList() {
   const [tab, setTab] = useState('upcoming');
@@ -53,7 +54,13 @@ export default function MatchList() {
             <tbody>
               {matches.map((m) => (
                 <tr key={m.matchId}>
-                  <td className="fw-semibold">{m.homeTeam?.teamName} vs {m.awayTeam?.teamName}</td>
+                  <td className="fw-semibold">
+                    <div className="d-flex align-items-center gap-2">
+                      <LogoBadge base64={m.homeTeam?.teamLogo} size={22} alt={m.homeTeam?.teamName} />
+                      {m.homeTeam?.teamName} vs {m.awayTeam?.teamName}
+                      <LogoBadge base64={m.awayTeam?.teamLogo} size={22} alt={m.awayTeam?.teamName} />
+                    </div>
+                  </td>
                   <td>{m.matchDate?.replace('T', ' ')}</td>
                   <td>{m.venue || '—'}</td>
                   <td><MatchStatusBadge status={m.status} /></td>

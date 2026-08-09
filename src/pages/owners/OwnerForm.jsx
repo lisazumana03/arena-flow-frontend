@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { getAllOwners, createOwner, updateOwner } from '../../service/ownerService';
 import { newId } from '../../service/api';
 import { Loading, ErrorBanner } from '../../components/PageState';
+import CountrySelect from '../../components/CountrySelect';
 
 const EMPTY = {
   firstName: '',
@@ -127,7 +128,7 @@ export default function OwnerForm() {
           </div>
           <div className="col-sm-6 mb-3">
             <label className="form-label">Nationality</label>
-            <input className="form-control" name="ownerNationality" value={form.ownerNationality} onChange={handleChange} />
+            <CountrySelect value={form.ownerNationality} onChange={(name) => setForm((f) => ({ ...f, ownerNationality: name }))} />
           </div>
         </div>
 

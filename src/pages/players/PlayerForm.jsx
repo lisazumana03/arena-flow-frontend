@@ -4,6 +4,7 @@ import { getAllPlayers, createPlayer, updatePlayer } from '../../service/playerS
 import { getAllTeams } from '../../service/teamService';
 import { newId } from '../../service/api';
 import { Loading, ErrorBanner } from '../../components/PageState';
+import CountrySelect from '../../components/CountrySelect';
 
 const POSITIONS = [
   'GK', 'LWB', 'LB', 'CB', 'RB', 'RWB', 'LM', 'CM', 'CDM', 'CAM', 'RM', 'LW', 'LF', 'ST', 'CF', 'RF', 'RW',
@@ -145,7 +146,7 @@ export default function PlayerForm() {
         <div className="row">
           <div className="col-sm-4 mb-3">
             <label className="form-label">Nationality</label>
-            <input className="form-control" name="playerNationality" value={form.playerNationality} onChange={handleChange} placeholder="e.g. South African" />
+            <CountrySelect value={form.playerNationality} onChange={(name) => setForm((f) => ({ ...f, playerNationality: name }))} />
           </div>
           <div className="col-sm-4 mb-3">
             <label className="form-label">Height (m)</label>

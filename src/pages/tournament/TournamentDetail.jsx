@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getTournament, getEditions, createEdition } from '../../service/tournamentService';
 import { Loading, ErrorBanner, EmptyState } from '../../components/PageState';
+import LogoBadge from '../../components/LogoBadge';
 
 const EMPTY_EDITION = { year: new Date().getFullYear(), seasonName: '', startDate: '', endDate: '' };
 
@@ -58,14 +59,26 @@ export default function TournamentDetail() {
     <div className="container py-4">
       <Link to="/tournaments" className="text-decoration-none">&larr; All tournaments</Link>
       <div className="d-flex justify-content-between align-items-start mt-2 mb-3 flex-wrap gap-2">
-        <div>
-          <h1 className="h3 mb-1">{tournament.tournamentName}</h1>
-          <span className="badge badge-pitch me-2">{tournament.format}</span>
-          <span className="text-muted">{tournament.description}</span>
+        <div className="d-flex align-items-center gap-3">
+          <LogoBadge base64={tournament.tournamentLogo} size={56} shape="square" alt={tournament.tournamentName} />
+          <div>
+            <h1 className="h3 mb-1">{tournament.tournamentName}</h1>
+            <span className="badge badge-pitch me-2">{tournament.format}</span>
+            {tournament.country && (
+              <span className="badge text-bg-light border me-2">
+                {tournament.country}
+                {tournament.pyramidLevel > 0 && ` · Tier ${tournament.pyramidLevel}`}
+              </span>
+            )}
+            <span className="text-muted">{tournament.description}</span>
+          </div>
         </div>
-        <button className="btn btn-pitch" onClick={() => setShowForm((s) => !s)}>
-          {showForm ? 'Cancel' : '+ New Edition'}
-        </button>
+        <div className="d-flex gap-2">
+          <Link to={`/tournaments/${id}/edit`} className="btn btn-outline-pitch">Edit</Link>
+          <button className="btn btn-pitch" onClick={() => setShowForm((s) => !s)}>
+            {showForm ? 'Cancel' : '+ New Edition'}
+          </button>
+        </div>
       </div>
 
       <ErrorBanner message={error} onRetry={load} />

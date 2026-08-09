@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllTournaments } from '../../service/tournamentService';
 import { Loading, ErrorBanner, EmptyState } from '../../components/PageState';
+import LogoBadge from '../../components/LogoBadge';
 
 export default function TournamentList() {
   const [tournaments, setTournaments] = useState([]);
@@ -35,9 +36,15 @@ export default function TournamentList() {
             <div className="col-md-6 col-lg-4" key={t.tournamentId}>
               <Link to={`/tournaments/${t.tournamentId}`} className="text-decoration-none">
                 <div className="card card-pitch h-100">
-                  <div className="card-header">{t.tournamentName}</div>
+                  <div className="card-header d-flex align-items-center gap-2">
+                    <LogoBadge base64={t.tournamentLogo} size={28} alt={t.tournamentName} />
+                    {t.tournamentName}
+                  </div>
                   <div className="card-body">
                     <span className="badge badge-pitch mb-2">{t.format}</span>
+                    {t.pyramidLevel > 0 && (
+                      <span className="badge text-bg-light border mb-2 ms-1">Tier {t.pyramidLevel}</span>
+                    )}
                     <p className="text-muted small mb-0">{t.description || 'No description yet.'}</p>
                   </div>
                 </div>

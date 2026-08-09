@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { getMatch, completeMatch, updateStandingsAfterMatch } from '../../service/matchService';
 import { Loading, ErrorBanner } from '../../components/PageState';
 import { MatchStatusBadge } from '../../components/Badges';
+import LogoBadge from '../../components/LogoBadge';
 import LineupPanel from './LineupPanel';
 import EventsPanel from './EventsPanel';
 import OfficialsPanel from './OfficialsPanel';
@@ -67,13 +68,23 @@ export default function MatchDetail() {
         <div className="card-body">
           <div className="pitch-bg rounded-3 p-4 text-center mb-3">
             <div className="row align-items-center">
-              <div className="col-5 text-end fw-bold fs-5">{match.homeTeam?.teamName}</div>
+              <div className="col-5 text-end">
+                <div className="d-flex align-items-center justify-content-end gap-2">
+                  <span className="fw-bold fs-5">{match.homeTeam?.teamName}</span>
+                  <LogoBadge base64={match.homeTeam?.teamLogo} size={40} alt={match.homeTeam?.teamName} />
+                </div>
+              </div>
               <div className="col-2">
                 <span className="fs-3 fw-bold">
                   {match.status === 'COMPLETED' ? `${match.homeScore} - ${match.awayScore}` : 'vs'}
                 </span>
               </div>
-              <div className="col-5 text-start fw-bold fs-5">{match.awayTeam?.teamName}</div>
+              <div className="col-5 text-start">
+                <div className="d-flex align-items-center gap-2">
+                  <LogoBadge base64={match.awayTeam?.teamLogo} size={40} alt={match.awayTeam?.teamName} />
+                  <span className="fw-bold fs-5">{match.awayTeam?.teamName}</span>
+                </div>
+              </div>
             </div>
           </div>
 

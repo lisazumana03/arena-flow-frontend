@@ -1,10 +1,14 @@
-import { get, post } from './api';
+import { get, post, put } from './api';
 
 const BASE = '/tournaments';
 
 export const getAllTournaments = () => get(BASE);
 export const getTournament = (id) => get(`${BASE}/${id}`);
 export const createTournament = (data) => post(`${BASE}/create`, data);
+// PUT /{id} was missing from the backend entirely (the service method existed but had no
+// route) — added it there specifically so fields create() doesn't accept, like the logo,
+// can be set afterwards.
+export const updateTournament = (id, data) => put(`${BASE}/${id}`, data);
 
 // Editions (a specific yearly run of a tournament, e.g. "Premier League 2027")
 export const getEditions = (tournamentId) => get(`${BASE}/${tournamentId}/editions`);

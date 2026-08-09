@@ -57,6 +57,7 @@ export default function AppRouter() {
 
         <Route path="/tournaments" element={<TournamentList />} />
         <Route path="/tournaments/new" element={<TournamentForm />} />
+        <Route path="/tournaments/:id/edit" element={<TournamentForm />} />
         <Route path="/tournaments/:id" element={<TournamentDetail />} />
         <Route path="/editions/:seasonId" element={<EditionDetail />} />
 

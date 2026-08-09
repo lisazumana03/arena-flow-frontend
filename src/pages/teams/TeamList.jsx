@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllTeams, deleteTeam } from '../../service/teamService';
 import { Loading, ErrorBanner, EmptyState } from '../../components/PageState';
+import LogoBadge from '../../components/LogoBadge';
 
 export default function TeamList() {
   const [teams, setTeams] = useState([]);
@@ -57,6 +58,9 @@ export default function TeamList() {
               <tr>
                 <th>Name</th>
                 <th>Type</th>
+                <th>Side</th>
+                <th>Nationality</th>
+                <th>Academy</th>
                 <th>Formed</th>
                 <th className="text-end">Actions</th>
               </tr>
@@ -64,12 +68,20 @@ export default function TeamList() {
             <tbody>
               {teams.map((t) => (
                 <tr key={t.teamId}>
-                  <td className="fw-semibold">{t.teamName}</td>
+                  <td className="fw-semibold">
+                    <div className="d-flex align-items-center gap-2">
+                      <LogoBadge base64={t.teamLogo} size={28} alt={t.teamName} />
+                      {t.teamName}
+                    </div>
+                  </td>
                   <td>
                     <span className={`badge ${t.teamType === 'NATIONAL' ? 'text-bg-primary' : 'badge-pitch'}`}>
                       {t.teamType}
                     </span>
                   </td>
+                  <td>{t.teamGender === 'FEMALE' ? 'Female' : 'Male'}</td>
+                  <td>{t.teamNationality || '—'}</td>
+                  <td>{t.teamType === 'CLUB' ? (t.hasYouthAcademy ? 'Yes' : 'No') : '—'}</td>
                   <td>{t.teamFormationYear}</td>
                   <td className="text-end">
                     <Link to={`/teams/${t.teamId}/edit`} className="btn btn-sm btn-outline-pitch me-2">Edit</Link>

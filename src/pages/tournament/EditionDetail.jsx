@@ -17,6 +17,7 @@ import { getSeasonMatches } from '../../service/matchService';
 import { getAllTeams } from '../../service/teamService';
 import { Loading, ErrorBanner, EmptyState } from '../../components/PageState';
 import { QualificationBadge, SeasonStatusBadge, MatchStatusBadge } from '../../components/Badges';
+import LogoBadge from '../../components/LogoBadge';
 
 const EMPTY_REG = { teamId: '', groupName: '', registrationDate: new Date().toISOString().slice(0, 10) };
 
@@ -36,6 +37,7 @@ export default function EditionDetail() {
 
   const [showReg, setShowReg] = useState(false);
   const [regForm, setRegForm] = useState(EMPTY_REG);
+  const [showZones, setShowZones] = useState(true);
 
   const load = () => {
     setLoading(true);
@@ -100,6 +102,17 @@ export default function EditionDetail() {
 
   if (loading) return <div className="container py-4"><Loading label="Loading edition…" /></div>;
   if (!season) return <div className="container py-4"><ErrorBanner message={error || 'Edition not found.'} /></div>;
+
+  const promotionSpots = season.tournament?.promotionSpots || 0;
+  const relegationSpots = season.tournament?.relegationSpots || 0;
+  const hasZones = (promotionSpots > 0 || relegationSpots > 0) && season.tournament?.format !== 'KNOCKOUT';
+
+  const zoneClassFor = (position) => {
+    if (!showZones || !hasZones) return '';
+    if (promotionSpots > 0 && position <= promotionSpots) return 'row-promotion';
+    if (relegationSpots > 0 && position > standings.length - relegationSpots) return 'row-relegation';
+    return '';
+  };
 
   return (
     <div className="container py-4">
@@ -170,7 +183,12 @@ export default function EditionDetail() {
             <tbody>
               {entries.map((e) => (
                 <tr key={e.tournamentTeamId}>
-                  <td className="fw-semibold">{e.team?.teamName}</td>
+                  <td className="fw-semibold">
+                    <div className="d-flex align-items-center gap-2">
+                      <LogoBadge base64={e.team?.teamLogo} size={24} alt={e.team?.teamName} />
+                      {e.team?.teamName}
+                    </div>
+                  </td>
                   <td>{e.groupName || '—'}</td>
                   <td>{e.points}</td>
                   <td><QualificationBadge status={e.qualificationStatus} /></td>
@@ -185,7 +203,33 @@ export default function EditionDetail() {
       {/* League table */}
       {standings.length > 0 && (
         <>
-          <h2 className="h5 mb-2">Standings</h2>
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <h2 className="h5 mb-0">Standings</h2>
+            {hasZones && (
+              <div className="d-flex align-items-center gap-3">
+                <div className="form-check form-switch mb-0">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    id="showZones"
+                    checked={showZones}
+                    onChange={(e) => setShowZones(e.target.checked)}
+                  />
+                  <label className="form-check-label small" htmlFor="showZones">
+                    Colour promotion/relegation
+                  </label>
+                </div>
+                {showZones && (
+                  <span className="small text-muted">
+                    {promotionSpots > 0 && <><span className="zone-swatch promotion" />Promotion </>}
+                    {promotionSpots > 0 && relegationSpots > 0 && '  '}
+                    {relegationSpots > 0 && <><span className="zone-swatch relegation" />Relegation</>}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
           <div className="table-responsive mb-4">
             <table className="table table-pitch align-middle">
               <thead>
@@ -195,9 +239,14 @@ export default function EditionDetail() {
               </thead>
               <tbody>
                 {standings.map((s) => (
-                  <tr key={s.standingId}>
+                  <tr key={s.standingId} className={zoneClassFor(s.position)}>
                     <td>{s.position}</td>
-                    <td className="fw-semibold">{s.team?.teamName}</td>
+                    <td className="fw-semibold">
+                      <div className="d-flex align-items-center gap-2">
+                        <LogoBadge base64={s.team?.teamLogo} size={24} alt={s.team?.teamName} />
+                        {s.team?.teamName}
+                      </div>
+                    </td>
                     <td>{s.gamesPlayed}</td>
                     <td>{s.wins}</td>
                     <td>{s.draws}</td>
@@ -232,7 +281,13 @@ export default function EditionDetail() {
             <tbody>
               {matches.map((m) => (
                 <tr key={m.matchId}>
-                  <td><Link to={`/matches/${m.matchId}`}>{m.homeTeam?.teamName} vs {m.awayTeam?.teamName}</Link></td>
+                  <td>
+                    <Link to={`/matches/${m.matchId}`} className="d-inline-flex align-items-center gap-1 text-decoration-none">
+                      <LogoBadge base64={m.homeTeam?.teamLogo} size={20} alt={m.homeTeam?.teamName} />
+                      {m.homeTeam?.teamName} vs {m.awayTeam?.teamName}
+                      <LogoBadge base64={m.awayTeam?.teamLogo} size={20} alt={m.awayTeam?.teamName} />
+                    </Link>
+                  </td>
                   <td>{m.matchDate?.replace('T', ' ')}</td>
                   <td><MatchStatusBadge status={m.status} /></td>
                   <td>{m.status === 'COMPLETED' ? `${m.homeScore} - ${m.awayScore}` : '—'}</td>

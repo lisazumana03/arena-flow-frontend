@@ -4,6 +4,7 @@ import { getAllTeams } from '../service/teamService';
 import { getAllPlayers } from '../service/playerService';
 import { getAllTournaments } from '../service/tournamentService';
 import { getUpcomingMatches } from '../service/matchService';
+import LogoBadge from '../components/LogoBadge';
 
 export default function Menu() {
   const [counts, setCounts] = useState({ teams: null, players: null, tournaments: null });
@@ -58,8 +59,10 @@ export default function Menu() {
                   <ul className="list-unstyled mb-0">
                     {upcoming.map((m) => (
                       <li key={m.matchId} className="mb-2">
-                        <Link to={`/matches/${m.matchId}`} className="text-decoration-none">
+                        <Link to={`/matches/${m.matchId}`} className="text-decoration-none d-flex align-items-center gap-2">
+                          <LogoBadge base64={m.homeTeam?.teamLogo} size={18} alt={m.homeTeam?.teamName} />
                           {m.homeTeam?.teamName} <span className="text-muted">vs</span> {m.awayTeam?.teamName}
+                          <LogoBadge base64={m.awayTeam?.teamLogo} size={18} alt={m.awayTeam?.teamName} />
                         </Link>
                         <div className="small text-muted">{m.matchDate?.replace('T', ' ')}</div>
                       </li>

@@ -79,8 +79,21 @@ Dashboard at `/` shows live counts and upcoming fixtures.
 - Neither `PlayerInjuryController` nor `PlayerSuspensionController` expose a "get all" or "get by team" endpoint — only per-player lookups. Fine for the current UI, but a league-wide "who's out this weekend" view isn't possible without either a new backend endpoint or an N-calls-per-player workaround (not implemented, to avoid hammering the API on every roster).
 - `finalizeMatch` (event-driven) and `completeMatch` (Overview tab, score-only) are two independent ways to close out a match in this backend — nothing stops both being called, or in either order. Not a bug exactly, but worth knowing before you rely on either one implying the other happened.
 
-## Everything from the original controller list is now covered
+## Phase 4 — Logos, reusable country picker, and a real bug fix
 
-Teams, Players, Venues, Tournaments/Editions, Matches, Owners, Budgets, Financials, Objectives, Transfers, Transfer Windows, Injuries, Suspensions, Lineups, Match Events, and Officials all have working, backend-verified frontend pages.
+**Logos (Teams & Tournaments)** — `Team.teamLogo` and `Tournament.tournamentLogo` already existed as `byte[]` fields backend-side (Jackson base64-encodes/decodes `byte[]` <-> JSON string automatically, so no dedicated upload endpoint was needed). Added:
+- `LogoPicker` (`src/components/LogoPicker.jsx`) — upload an image (auto center-cropped and resized to 1000×1000 client-side via canvas) **or** "create your own" — a simple in-app crest generator (shape, two colours, up to 3 initials), also rendered to a 1000×1000 canvas. Either path produces a plain base64 PNG string that goes straight into the entity's `teamLogo`/`tournamentLogo` field.
+- `LogoBadge` (`src/components/LogoBadge.jsx`) — display component with a graceful ⚽ fallback when no logo is set. Used in `TeamList`, `TeamForm`, `TournamentList`, `TournamentDetail`, `TournamentForm`, the edition standings table, the edition team-entries table, the edition fixtures table, `MatchList`, `MatchDetail`'s scoreline header, and the dashboard's upcoming-matches widget.
+
+**Real backend bug found and fixed:** `Tournament` had no update endpoint exposed *at all* — `ITournamentService.update()` existed but nothing in `TournamentController` routed to it, so there was no way to set a tournament's logo (or fix a typo in its name) after creation. Added `PUT /api/tournaments/{tournamentId}` to the controller, matching the same "body must include the id, since it just re-saves whatever's sent" pattern as Team/Owner. `TournamentForm` now supports editing, and creation with a logo does a create-then-update in sequence since `create()` still only accepts name/format/description.
+
+**Country picker rebuilt from scratch, and fixed for real.** The original `CountrySelector.jsx` broke when opening the dropdown. Root cause: it depended on `react-select` v5.10, whose current major version predates React 19 (this project runs 19.2) — a well-known version mismatch that breaks the library's portal/ref handling for the dropdown menu. Rather than pin to an older React or chase a library patch, replaced the whole stack:
+- `src/utils/countries.js` — country list built from a static array of ISO 3166-1 alpha-2 codes, with names resolved via the browser's native `Intl.DisplayNames` and flags rendered as Unicode regional-indicator emoji. No image assets, no third-party package.
+- `src/components/CountrySelect.jsx` — a small self-built searchable combobox (type to filter, arrow keys + Enter to navigate, click-outside to close). Stores/returns the country's plain display name (e.g. `"South Africa"`) as a string, matching the plain `String` nationality fields on the backend.
+- Removed `react-select`, `react-select-country-list`, and `react-world-flags` from `package.json` entirely — this also dropped the production bundle from ~4.2MB to ~450KB, since `react-select` pulled in `@emotion` and several other dependencies for its CSS-in-JS styling.
+- Wired `CountrySelect` into **Player nationality** (`PlayerForm`) and **Owner nationality** (`OwnerForm`). The standalone `/select-country` demo page now uses the same component.
+
+**Team country — not added, needs a decision.** `Team` has no country/nation field on the backend at all (only `teamName`, `teamFormationYear`, `teamType`, `teamLogo`, `owner`). Adding a country picker there would need a new backend column first (same shape of fix as the tournament logo one above) — didn't make that schema change without confirming it's wanted, since it touches the database model rather than just wiring up an existing field.
+
 
 

@@ -28,7 +28,16 @@ async function request(path, options = {}) {
 
   if (res.status === 204) return null;
   const text = await res.text();
-  return text ? JSON.parse(text) : null;
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    // A handful of backend endpoints (e.g. recalculate-standings, update-standings) return
+    // a plain confirmation string like "Standings updated for match ..." on success rather
+    // than JSON. None of those callers use the resolved value, so returning the raw text
+    // instead of throwing keeps those calls working without special-casing each route.
+    return text;
+  }
 }
 
 export const get = (path) => request(path);
