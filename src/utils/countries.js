@@ -3,6 +3,11 @@
 // emoji (no image assets, no third-party package — both are natively supported in every
 // modern browser). This avoids react-select/react-world-flags, whose current major
 // versions predate React 19 and break when their dropdown menu opens under it.
+//
+// GB is deliberately excluded from ALPHA2_CODES below and replaced with its four footballing
+// nations (see HOME_NATIONS). Each has its own association, national team and league pyramid
+// (Premier League vs. Scottish Premiership, etc — see TournamentUtil on the backend), so a
+// single "United Kingdom" entry can't represent a team/tournament's actual country here.
 
 const ALPHA2_CODES = [
   'AF','AL','DZ','AD','AO','AG','AR','AM','AU','AT','AZ','BS','BH','BD','BB','BY','BE','BZ','BJ','BT',
@@ -14,7 +19,18 @@ const ALPHA2_CODES = [
   'NA','NR','NP','NL','NZ','NI','NE','NG','MK','NO','OM','PK','PW','PA','PG','PY','PE','PH','PL','PT',
   'QA','RO','RU','RW','KN','LC','VC','WS','SM','ST','SA','SN','RS','SC','SL','SG','SK','SI','SB','SO',
   'ZA','SS','ES','LK','SD','SR','SE','CH','SY','TJ','TZ','TH','TL','TG','TO','TT','TN','TR','TM','TV',
-  'UG','UA','AE','GB','US','UY','UZ','VU','VA','VE','VN','YE','ZM','ZW',
+  'UG','UA','AE','US','UY','UZ','VU','VA','VE','VN','YE','ZM','ZW',
+];
+
+// England, Scotland and Wales have official Unicode "black flag" tag sequences.
+// Northern Ireland has no ISO/Unicode flag of its own (its football team traditionally
+// uses the St Patrick's Saltire on kit, but there's no standard emoji for it) - GB is used
+// as the closest available emoji, which is the same convention IFA/UEFA badge sets fall back to.
+const HOME_NATIONS = [
+  { code: 'GB-ENG', name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+  { code: 'GB-SCT', name: 'Scotland', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿' },
+  { code: 'GB-WLS', name: 'Wales', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿' },
+  { code: 'GB-NIR', name: 'Northern Ireland', flag: '🇬🇧' },
 ];
 
 const displayNames = typeof Intl !== 'undefined' && Intl.DisplayNames
@@ -33,6 +49,7 @@ export const COUNTRIES = ALPHA2_CODES
     name: displayNames ? displayNames.of(code) : code,
     flag: codeToFlagEmoji(code),
   }))
+  .concat(HOME_NATIONS)
   .sort((a, b) => a.name.localeCompare(b.name));
 
 export function findCountryByName(name) {

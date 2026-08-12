@@ -3,24 +3,27 @@ import { useNavigate, Link } from 'react-router-dom';
 import { scheduleMatch } from '../../service/matchService';
 import { getAllTeams } from '../../service/teamService';
 import { getAllVenues } from '../../service/venueService';
+import { getAllSeasons } from '../../service/seasonService';
 import { Loading, ErrorBanner } from '../../components/PageState';
 
-const EMPTY = { homeTeamId: '', awayTeamId: '', matchDate: '', venue: '' };
+const EMPTY = { homeTeamId: '', awayTeamId: '', matchDate: '', venue: '', seasonId: '' };
 
 export default function MatchForm() {
   const navigate = useNavigate();
   const [teams, setTeams] = useState([]);
   const [venues, setVenues] = useState([]);
+  const [seasons, setSeasons] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([getAllTeams(), getAllVenues().catch(() => [])])
-      .then(([t, v]) => {
+    Promise.all([getAllTeams(), getAllVenues().catch(() => []), getAllSeasons().catch(() => [])])
+      .then(([t, v, s]) => {
         setTeams(t);
         setVenues(v);
+        setSeasons(s);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -60,6 +63,18 @@ export default function MatchForm() {
       <h1 className="h3 mb-3">Schedule Match</h1>
       <ErrorBanner message={error} />
       <form onSubmit={handleSubmit} className="card card-pitch p-4">
+        <div className="mb-3">
+          <label className="form-label">Tournament edition (season)</label>
+          <select className="form-select" name="seasonId" value={form.seasonId} onChange={handleChange}>
+            <option value="">No season (friendly — won't count towards standings)</option>
+            {seasons.map((s) => (
+              <option key={s.seasonId} value={s.seasonId}>
+                {s.tournament?.tournamentName ? `${s.tournament.tournamentName} — ` : ''}{s.seasonName}
+              </option>
+            ))}
+          </select>
+          <div className="form-text">Pick the edition this match belongs to, or standings won't update when the match is completed.</div>
+        </div>
         <div className="row">
           <div className="col-sm-6 mb-3">
             <label className="form-label">Home team</label>
