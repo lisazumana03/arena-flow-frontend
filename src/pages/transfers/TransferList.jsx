@@ -35,7 +35,7 @@ export default function TransferList() {
     setLoading(true);
     setError('');
     Promise.all([getAllTransfers(), getAllPlayers(), getAllTeams(), getAllWindows()])
-      .then(([tr, p, t, w]) => { setTransfers(tr); setPlayers(p); setTeams(t); setWindows(w); })
+      .then(([tr, p, t, w]) => { setTransfers(tr); setPlayers(p); setTeams(t.filter((team) => team.teamType === 'CLUB')); setWindows(w); })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   };
@@ -92,7 +92,7 @@ export default function TransferList() {
               <label className="form-label">Player</label>
               <select className="form-select" name="playerId" value={form.playerId} onChange={handleChange} required>
                 <option value="">Select…</option>
-                {players.map((p) => <option key={p.playerId} value={p.playerId}>{fullName(p.playerName)} ({p.team?.teamName || 'Unassigned'})</option>)}
+                {players.map((p) => <option key={p.playerId} value={p.playerId}>{fullName(p.playerName)} ({p.club?.teamName || 'Unassigned'})</option>)}
               </select>
             </div>
             <div className="col-sm-3 mb-2">

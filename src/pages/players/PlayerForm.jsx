@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { getAllPlayers, createPlayer, updatePlayer } from '../../service/playerService';
 import { getAllTeams } from '../../service/teamService';
+import { getAllSeasons, getCurrentSeason } from '../../service/seasonService';
+import { createSquadRegistration } from '../../service/squadRegistrationService';
 import { newId } from '../../service/api';
 import { Loading, ErrorBanner } from '../../components/PageState';
 import CountrySelect from '../../components/CountrySelect';
@@ -20,7 +22,11 @@ const EMPTY = {
   playerNationality: '',
   playerHeight: '',
   playerWeight: '',
-  teamId: '',
+  clubId: '',
+  clubKitNumber: '',
+  seasonId: '',
+  nationalTeamId: '',
+  nationalTeamKitNumber: '',
 };
 
 export default function PlayerForm() {
@@ -30,16 +36,26 @@ export default function PlayerForm() {
 
   const [form, setForm] = useState(EMPTY);
   const [teams, setTeams] = useState([]);
+  const [seasons, setSeasons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const clubs = teams.filter((t) => t.teamType === 'CLUB');
+  const nationalTeams = teams.filter((t) => t.teamType === 'NATIONAL');
+
   useEffect(() => {
     // The backend has no GET /player/{id}, so for editing we load the full list and
     // find the matching player — the team dropdown load doubles up here too.
-    Promise.all([getAllTeams(), isEdit ? getAllPlayers() : Promise.resolve(null)])
-      .then(([teamList, players]) => {
+    Promise.all([
+      getAllTeams(),
+      getAllSeasons().catch(() => []),
+      getCurrentSeason().catch(() => null),
+      isEdit ? getAllPlayers() : Promise.resolve(null),
+    ])
+      .then(([teamList, seasonList, currentSeason, players]) => {
         setTeams(teamList);
+        setSeasons(seasonList || []);
         if (isEdit) {
           const player = players.find((p) => p.playerId === id);
           if (!player) throw new Error('Player not found.');
@@ -53,8 +69,14 @@ export default function PlayerForm() {
             playerNationality: player.playerNationality || '',
             playerHeight: player.playerHeight ?? '',
             playerWeight: player.playerWeight ?? '',
-            teamId: player.team?.teamId || '',
+            clubId: player.club?.teamId || '',
+            clubKitNumber: '',
+            seasonId: currentSeason?.seasonId || '',
+            nationalTeamId: player.nationalTeam?.teamId || '',
+            nationalTeamKitNumber: player.nationalTeamKitNumber ?? '',
           });
+        } else {
+          setForm((f) => ({ ...f, seasonId: currentSeason?.seasonId || '' }));
         }
       })
       .catch((e) => setError(e.message))
@@ -66,8 +88,8 @@ export default function PlayerForm() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const buildPayload = () => ({
-    playerId: isEdit ? id : newId(),
+  const buildPlayerPayload = (playerId) => ({
+    playerId,
     playerName: {
       firstName: form.firstName,
       middleName: form.middleName || null,
@@ -79,7 +101,11 @@ export default function PlayerForm() {
     playerNationality: form.playerNationality,
     playerHeight: form.playerHeight === '' ? 0 : Number(form.playerHeight),
     playerWeight: form.playerWeight === '' ? 0 : Number(form.playerWeight),
-    team: form.teamId ? { teamId: form.teamId } : null,
+    // Football rule: a player must play for a club and must represent a national team.
+    club: form.clubId ? { teamId: form.clubId } : null,
+    nationalTeam: form.nationalTeamId ? { teamId: form.nationalTeamId } : null,
+    // The national team kit number is never auto-derived - it's always set by hand here.
+    nationalTeamKitNumber: form.nationalTeamKitNumber === '' ? null : Number(form.nationalTeamKitNumber),
   });
 
   const handleSubmit = async (e) => {
@@ -87,12 +113,28 @@ export default function PlayerForm() {
     setSaving(true);
     setError('');
     try {
-      const payload = buildPayload();
+      const playerId = isEdit ? id : newId();
+      const payload = buildPlayerPayload(playerId);
       if (isEdit) {
         await updatePlayer(id, payload);
       } else {
         await createPlayer(payload);
       }
+
+      // Assigning a player to a club always requires a kit number, enforced by the
+      // squad-registration record (and unique per team + season).
+      if (!isEdit && form.clubId) {
+        await createSquadRegistration({
+          squadRegistrationId: newId(),
+          player: { playerId },
+          team: { teamId: form.clubId },
+          season: { seasonId: form.seasonId },
+          kitNumber: Number(form.clubKitNumber),
+          registrationDate: new Date().toISOString().slice(0, 10),
+          status: 'ACTIVE',
+        });
+      }
+
       navigate('/players');
     } catch (e2) {
       setError(e2.message);
@@ -158,14 +200,73 @@ export default function PlayerForm() {
           </div>
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Team</label>
-          <select className="form-select" name="teamId" value={form.teamId} onChange={handleChange}>
-            <option value="">Unassigned</option>
-            {teams.map((t) => (
-              <option key={t.teamId} value={t.teamId}>{t.teamName}</option>
-            ))}
-          </select>
+        <hr className="my-1" />
+        <p className="text-muted small mb-2">Every player must play for a club and represent a national team.</p>
+
+        <div className="row">
+          <div className="col-sm-4 mb-3">
+            <label className="form-label">Club</label>
+            <select className="form-select" name="clubId" value={form.clubId} onChange={handleChange} required disabled={isEdit}>
+              <option value="">Select a club…</option>
+              {clubs.map((t) => (
+                <option key={t.teamId} value={t.teamId}>{t.teamName}</option>
+              ))}
+            </select>
+            {isEdit && (
+              <div className="form-text">Club changes go through the Transfers page.</div>
+            )}
+          </div>
+          <div className="col-sm-4 mb-3">
+            <label className="form-label">Club kit number</label>
+            <input
+              type="number"
+              min="1"
+              className="form-control"
+              name="clubKitNumber"
+              value={form.clubKitNumber}
+              onChange={handleChange}
+              required={!isEdit}
+              disabled={isEdit}
+              placeholder="e.g. 9"
+            />
+            {isEdit && (
+              <div className="form-text">Club kit numbers are changed via transfers or squad registration, not here.</div>
+            )}
+          </div>
+          <div className="col-sm-4 mb-3">
+            <label className="form-label">Season</label>
+            <select className="form-select" name="seasonId" value={form.seasonId} onChange={handleChange} required={!isEdit} disabled={isEdit}>
+              <option value="">Select a season…</option>
+              {seasons.map((s) => (
+                <option key={s.seasonId} value={s.seasonId}>{s.seasonName || s.seasonId}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="row">
+          <div className="col-sm-4 mb-3">
+            <label className="form-label">National team</label>
+            <select className="form-select" name="nationalTeamId" value={form.nationalTeamId} onChange={handleChange} required>
+              <option value="">Select a national team…</option>
+              {nationalTeams.map((t) => (
+                <option key={t.teamId} value={t.teamId}>{t.teamName}</option>
+              ))}
+            </select>
+          </div>
+          <div className="col-sm-4 mb-3">
+            <label className="form-label">National team kit number</label>
+            <input
+              type="number"
+              min="1"
+              className="form-control"
+              name="nationalTeamKitNumber"
+              value={form.nationalTeamKitNumber}
+              onChange={handleChange}
+              required
+              placeholder="Manually assigned"
+            />
+          </div>
         </div>
 
         <div className="d-flex gap-2 mt-2">

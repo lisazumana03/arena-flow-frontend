@@ -39,8 +39,10 @@ export default function PlayerList() {
 
   useEffect(load, []);
 
+  const clubs = useMemo(() => teams.filter((t) => t.teamType === 'CLUB'), [teams]);
+
   const filtered = useMemo(
-    () => (teamFilter ? players.filter((p) => p.team?.teamId === teamFilter) : players),
+    () => (teamFilter ? players.filter((p) => p.club?.teamId === teamFilter) : players),
     [players, teamFilter]
   );
 
@@ -74,7 +76,7 @@ export default function PlayerList() {
           }}
         >
           <option value="">All teams</option>
-          {teams.map((t) => (
+          {clubs.map((t) => (
             <option key={t.teamId} value={t.teamId}>{t.teamName}</option>
           ))}
         </select>
@@ -97,7 +99,8 @@ export default function PlayerList() {
               <tr>
                 <th>Name</th>
                 <th>Position</th>
-                <th>Team</th>
+                <th>Club</th>
+                <th>National team</th>
                 <th>Nationality</th>
                 <th>Age</th>
                 <th className="text-end">Actions</th>
@@ -108,7 +111,11 @@ export default function PlayerList() {
                 <tr key={p.playerId}>
                   <td className="fw-semibold">{fullName(p.playerName)}</td>
                   <td><span className="badge badge-pitch">{p.playerPosition}</span></td>
-                  <td>{p.team?.teamName || <span className="text-muted">Unassigned</span>}</td>
+                  <td>{p.club?.teamName || <span className="text-muted">Unassigned</span>}</td>
+                  <td>
+                    {p.nationalTeam?.teamName || <span className="text-muted">Unassigned</span>}
+                    {p.nationalTeam && p.nationalTeamKitNumber ? ` (#${p.nationalTeamKitNumber})` : ''}
+                  </td>
                   <td>{p.playerNationality || '—'}</td>
                   <td>{age(p.playerDateOfBirth)}</td>
                   <td className="text-end">
