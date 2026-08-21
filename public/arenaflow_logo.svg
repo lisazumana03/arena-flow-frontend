@@ -1,0 +1,63 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0F766E"/>
+      <stop offset="100%" stop-color="#134E4A"/>
+    </linearGradient>
+    <linearGradient id="flowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FB923C"/>
+      <stop offset="100%" stop-color="#F97316"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Arena/shield base shape (original geometric silhouette) -->
+  <path d="M256 40
+           L400 96
+           V256
+           C400 356 336 428 256 468
+           C176 428 112 356 112 256
+           V96
+           Z"
+        fill="url(#shieldGrad)" stroke="#0B4A45" stroke-width="4"/>
+
+  <!-- Inner arena rim -->
+  <path d="M256 68
+           L376 114
+           V254
+           C376 342 320 404 256 440
+           C192 404 136 342 136 254
+           V114
+           Z"
+        fill="none" stroke="#5EEAD4" stroke-width="3" stroke-opacity="0.5"/>
+
+  <!-- Stylized soccer ball: original geometric construction, not traced from any existing mark -->
+  <g transform="translate(256 236)">
+    <circle r="66" fill="#FFFFFF" stroke="#134E4A" stroke-width="3"/>
+    <!-- central pentagon -->
+    <polygon points="0,-26 25,-8 15,22 -15,22 -25,-8" fill="#134E4A"/>
+    <!-- connecting seam lines from each pentagon vertex out to the ball edge -->
+    <line x1="0" y1="-26" x2="0" y2="-60" stroke="#134E4A" stroke-width="3" stroke-linecap="round"/>
+    <line x1="25" y1="-8" x2="56" y2="-18" stroke="#134E4A" stroke-width="3" stroke-linecap="round"/>
+    <line x1="15" y1="22" x2="34" y2="50" stroke="#134E4A" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-15" y1="22" x2="-34" y2="50" stroke="#134E4A" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-25" y1="-8" x2="-56" y2="-18" stroke="#134E4A" stroke-width="3" stroke-linecap="round"/>
+    <!-- small hex-facet arcs to suggest classic panel pattern -->
+    <path d="M0,-60 Q30,-52 25,-8" fill="none" stroke="#134E4A" stroke-width="2" opacity="0.6"/>
+    <path d="M56,-18 Q46,10 15,22" fill="none" stroke="#134E4A" stroke-width="2" opacity="0.6"/>
+    <path d="M34,50 Q0,50 -15,22" fill="none" stroke="#134E4A" stroke-width="2" opacity="0.6"/>
+    <path d="M-34,50 Q-46,10 -25,-8" fill="none" stroke="#134E4A" stroke-width="2" opacity="0.6"/>
+    <path d="M-56,-18 Q-30,-52 0,-60" fill="none" stroke="#134E4A" stroke-width="2" opacity="0.6"/>
+    <circle r="66" fill="none" stroke="#134E4A" stroke-width="3"/>
+  </g>
+
+  <!-- Flow motion lines sweeping through the ball (the "Flow" concept) -->
+  <path d="M84 300 C150 270 190 320 256 300 C322 280 362 330 428 300"
+        fill="none" stroke="url(#flowGrad)" stroke-width="10" stroke-linecap="round" opacity="0.9"/>
+  <path d="M96 336 C160 312 196 350 256 336 C316 322 352 358 416 336"
+        fill="none" stroke="url(#flowGrad)" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Wordmark -->
+  <text x="256" y="500" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="40" fill="#0F766E" letter-spacing="1">
+    ARENA<tspan fill="#F97316">FLOW</tspan>
+  </text>
+</svg>
